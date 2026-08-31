@@ -2,6 +2,25 @@
 
 Status: **requirements only**. Do not implement until this spec is accepted.
 
+This file is the **umbrella** snapshot. Do not delete it.
+
+- **Number:** 00 (umbrella)
+- **Status:** requirements — not started
+
+Work is split into:
+
+| # | Plan | Topic | Status |
+|---|------|--------|--------|
+| 01 | [python-project.md](python-project.md) | Python layout, CLI, deps | requirements — not started |
+| 02 | [restore-ruby-save.md](restore-ruby-save.md) | Copy original `.sav` into Dolphin | requirements — not started |
+| 03 | [dolphin-process.md](dolphin-process.md) | Keep Dolphin alive, Port 2, boot Channel | requirements — not started |
+| 04 | [inputs-macos.md](inputs-macos.md) | Keyboard, window focus, Load ROM | requirements — not started |
+| 05 | [channel-gba-sequence.md](channel-gba-sequence.md) | Timed Channel → GBA transfer + Ruby save | requirements — not started |
+| 06 | [parse-shiny-value.md](parse-shiny-value.md) | Party parse, SV 0..7 | requirements — not started |
+| 07 | [logging.md](logging.md) | Terminal + files, resume attempt number | requirements — not started |
+| 08 | [when-shiny.md](when-shiny.md) | Stop loop, summary, notify TODO | requirements — not started |
+| 09 | [hunt-loop.md](hunt-loop.md) | Wire the pieces into the repeat loop | requirements — not started |
+
 ## Goal
 
 A **Python** program that repeats the Pokémon Channel → Ruby Jirachi transfer until a **shiny** Jirachi is found. Each failed attempt restores the original Ruby save and starts over. Each attempt is logged to a text file **and** to the terminal.
