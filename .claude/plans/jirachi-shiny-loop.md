@@ -11,7 +11,7 @@ Work is split into:
 
 | # | Plan | Topic | Status |
 |---|------|--------|--------|
-| 01 | [python-project.md](python-project.md) | Python layout, CLI, deps | requirements — not started |
+| 01 | [python-project.md](python-project.md) | Python layout, CLI, deps | done |
 | 02 | [restore-ruby-save.md](restore-ruby-save.md) | Copy original `.sav` into Dolphin | requirements — not started |
 | 03 | [dolphin-process.md](dolphin-process.md) | Keep Dolphin alive, Port 2, boot Channel | requirements — not started |
 | 04 | [inputs-macos.md](inputs-macos.md) | Keyboard, window focus, Load ROM | requirements — not started |

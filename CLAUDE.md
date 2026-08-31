@@ -35,4 +35,6 @@ Automatización para cazar Jirachi shiny usando recursos de GameCube / GBA. Los 
 
 ## Comandos
 
-Aún no hay toolchain fijada. Cuando exista (`make`, tests, lint), documentarla aquí y en `.claude/rules/toolchain.md`.
+- Hunt (desde la raíz del repo): `python3 -m botjirachi`
+- Si faltan ISO, GBA, `.sav` original, BIOS GBA o el binario de Dolphin: error en stderr y exit `1`
+- Detalle: `.claude/rules/toolchain.md`

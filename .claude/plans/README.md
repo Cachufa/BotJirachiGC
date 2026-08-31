@@ -31,7 +31,7 @@ Split (implement in this order). Status values: `requirements — not started` �
 
 | # | Plan | Status |
 |---|------|--------|
-| 01 | [python-project.md](python-project.md) | requirements — not started |
+| 01 | [python-project.md](python-project.md) | done |
 | 02 | [restore-ruby-save.md](restore-ruby-save.md) | requirements — not started |
 | 03 | [dolphin-process.md](dolphin-process.md) | requirements — not started |
 | 04 | [inputs-macos.md](inputs-macos.md) | requirements — not started |
@@ -41,4 +41,4 @@ Split (implement in this order). Status values: `requirements — not started` �
 | 08 | [when-shiny.md](when-shiny.md) | requirements — not started |
 | 09 | [hunt-loop.md](hunt-loop.md) | requirements — not started |
 
-Active: all of the above, **requirements only**, not implementing yet.
+Active: [python-project.md](python-project.md) implemented. Next: [restore-ruby-save.md](restore-ruby-save.md).

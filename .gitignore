@@ -232,3 +232,6 @@ resources/*.sav
 resources/*.gci
 resources/*.bin
 resources/*.BIN
+
+# Hunt logs
+logs/
