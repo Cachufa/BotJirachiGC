@@ -216,3 +216,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Claude / Grok local overrides (no compartir)
+CLAUDE.local.md
+.claude/CLAUDE.local.md
+.claude/settings.local.json
+
+# macOS
+.DS_Store
+
+# Game dumps (local only; do not commit)
+resources/*.iso
+resources/*.gba
+resources/*.sav
+resources/*.gci
+resources/*.bin
+resources/*.BIN

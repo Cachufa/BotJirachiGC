@@ -1,0 +1,38 @@
+# BotJirachiGC
+
+Bot para shiny hunting de Jirachi (Pokémon Channel + Ruby).
+
+Este archivo es la memoria de proyecto. Lo leen Claude Code y Grok (compatibilidad Claude: `CLAUDE.md`, `.claude/CLAUDE.md`, `.claude/rules/`).
+
+## Qué es este repo
+
+Automatización para cazar Jirachi shiny usando recursos de GameCube / GBA. Los dumps (ISO, GBA, SAV, GCI) viven en `resources/` y **no son código**.
+
+## Dónde está qué
+
+| Ruta | Uso |
+|------|-----|
+| `CLAUDE.md` | Normas y contexto del proyecto (este archivo) |
+| `.claude/rules/` | Normas modulares (se cargan todas) |
+| `.claude/plans/` | Planes de trabajo, specs, checklists |
+| `resources/` | ROMs, saves, dumps — no commitear dumps nuevos si pesan o son ilegales de redistribuir |
+| `README.md` | Descripción corta para humanos |
+
+## Cómo trabajar aquí
+
+- **No hay commit ni push sin permiso expreso del usuario.** Ni `git commit`, ni `git push`, ni `--amend`, ni staging “por si acaso”. Esperar una frase clara del tipo “haz commit” / “commitea esto”.
+- Todo **código, identificadores, comentarios, docstrings, mensajes de commit y texto en el repo** van en **inglés**. El chat con el usuario puede ir en español.
+- Antes de implementar, lee las reglas en `.claude/rules/` y el plan activo en `.claude/plans/` si existe.
+- Plans live in `.claude/plans/<name>.md`, in English. One active plan at a time unless stated otherwise.
+- No inventes arquitectura: el repo está empezando. Propón y documenta en un plan antes de crear un árbol grande de carpetas.
+- No toques dumps en `resources/` salvo que el usuario lo pida. No copies ROMs a otros sitios.
+- Código nuevo: claro, acotado al pedido, sin refactors de relleno.
+
+## Idioma
+
+- Chat: español (salvo que el usuario pida otra cosa).
+- Repo: inglés — código, comentarios, docs en el árbol de código, nombres de archivos de implementación.
+
+## Comandos
+
+Aún no hay toolchain fijada. Cuando exista (`make`, tests, lint), documentarla aquí y en `.claude/rules/toolchain.md`.
