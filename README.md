@@ -16,6 +16,8 @@ From the repo root:
 python3 -m botjirachi
 ```
 
-Requires the Channel ISO, Ruby GBA and original Ruby `.sav` under `resources/`, GBA BIOS at `~/Library/Application Support/Dolphin/GBA/gba_bios.bin`, and Dolphin at `/Applications/Dolphin.app`. Missing paths are listed on stderr (exit `1`). The hunt loop itself is later plans; this command is the single entry point.
+Requires the Channel ISO, Ruby GBA and original Ruby `.sav` under `resources/`, GBA BIOS at `~/Library/Application Support/Dolphin/GBA/gba_bios.bin`, and Dolphin at `/Applications/Dolphin.app`. Missing paths are listed on stderr (exit `1`).
+
+On a successful path check the original Ruby `.sav` is copied into Dolphin `GBA/Saves` as both `Pokemon - Edicion Rubi (Spain).sav` and `…-2.sav`. `resources/` is never written. The hunt loop itself is later plans; this command is the single entry point.
 
 See `CLAUDE.md` for project conventions.

@@ -8,6 +8,7 @@ from pathlib import Path
 CHANNEL_ISO_NAME = "Pokemon Channel (Europe) (En,Fr,De,Es,It) (v1.00).iso"
 RUBY_GBA_NAME = "Pokemon - Edicion Rubi (Spain).gba"
 RUBY_SAV_NAME = "Pokemon - Edicion Rubi (Spain).sav"
+RUBY_SAV_PORT2_NAME = "Pokemon - Edicion Rubi (Spain)-2.sav"
 
 DEFAULT_DOLPHIN_APP = Path("/Applications/Dolphin.app")
 DEFAULT_DOLPHIN_BINARY = DEFAULT_DOLPHIN_APP / "Contents" / "MacOS" / "Dolphin"
@@ -70,6 +71,22 @@ class HuntPaths:
             dolphin_binary=dolphin_executable(dolphin_binary or DEFAULT_DOLPHIN_BINARY),
             dolphin_user_dir=user_dir,
         )
+
+    @property
+    def resources_dir(self) -> Path:
+        return (self.repo_root / "resources").resolve()
+
+    @property
+    def gba_saves_dir(self) -> Path:
+        return self.dolphin_user_dir / "GBA" / "Saves"
+
+    @property
+    def dolphin_ruby_sav(self) -> Path:
+        return self.gba_saves_dir / RUBY_SAV_NAME
+
+    @property
+    def dolphin_ruby_sav_port2(self) -> Path:
+        return self.gba_saves_dir / RUBY_SAV_PORT2_NAME
 
     def missing(self) -> list[tuple[str, Path]]:
         required = (

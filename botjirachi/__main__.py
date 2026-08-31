@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from botjirachi.paths import HuntPaths
+from botjirachi.restore import RestoreError, restore_ruby_save
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -53,6 +54,8 @@ def print_header(paths: HuntPaths) -> None:
     print(f"  bios:    {paths.gba_bios}")
     print(f"  dolphin: {paths.dolphin_binary}")
     print(f"  user:    {paths.dolphin_user_dir}")
+    print(f"  gba sav: {paths.dolphin_ruby_sav}")
+    print(f"  gba -2:  {paths.dolphin_ruby_sav_port2}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -63,6 +66,14 @@ def main(argv: list[str] | None = None) -> int:
         report_missing(missing)
         return 1
     print_header(paths)
+    try:
+        dests = restore_ruby_save(paths)
+    except RestoreError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print("Restored original Ruby save to:")
+    for dest in dests:
+        print(f"  {dest}")
     return 0
 
 
