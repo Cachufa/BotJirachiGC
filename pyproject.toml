@@ -4,8 +4,7 @@ version = "0.1.0"
 description = "Shiny hunt bot for Jirachi (Pokémon Channel + Ruby) via Dolphin"
 readme = "README.md"
 requires-python = ">=3.10"
-# No extra dependencies in plan 01. Plan 04 (macOS inputs) will add pynput
-# (or pyautogui) when keyboard/mouse events are needed to drive Dolphin.
+dependencies = ["pynput>=1.7.6"]
 
 [project.scripts]
 botjirachi = "botjirachi.__main__:main"

@@ -81,6 +81,14 @@ class HuntPaths:
         return self.dolphin_user_dir / "Config" / "Dolphin.ini"
 
     @property
+    def gcpad_ini(self) -> Path:
+        return self.dolphin_user_dir / "Config" / "GCPadNew.ini"
+
+    @property
+    def gba_ini(self) -> Path:
+        return self.dolphin_user_dir / "Config" / "GBA.ini"
+
+    @property
     def gba_saves_dir(self) -> Path:
         return self.dolphin_user_dir / "GBA" / "Saves"
 

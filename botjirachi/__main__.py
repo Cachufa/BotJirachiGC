@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 from botjirachi.dolphin import DolphinError, DolphinSession
+from botjirachi.inputs import InputError, PadDriver
 from botjirachi.paths import HuntPaths
 from botjirachi.restore import RestoreError, restore_ruby_save
 
@@ -25,6 +27,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--dolphin-user-dir",
         type=Path,
         help="Dolphin user data directory",
+    )
+    parser.add_argument(
+        "--probe-inputs",
+        action="store_true",
+        help="After Channel boots: tap Channel A (X), load Ruby on GBA2, tap GBA A",
     )
     return parser
 
@@ -82,6 +89,32 @@ def main(argv: list[str] | None = None) -> int:
         print(str(exc), file=sys.stderr)
         return 1
     print("Channel running with Port 2 empty (no GBA window)")
+    for title in session.window_titles():
+        print(f"  window: {title}")
+    if args.probe_inputs:
+        return probe_inputs(session)
+    return 0
+
+
+def probe_inputs(session: DolphinSession) -> int:
+    try:
+        pad = PadDriver(session)
+        print(
+            "Input maps: "
+            f"Channel A={pad.channel_map['A']!r}  "
+            f"GBA2 A={pad.gba_map['A']!r}"
+        )
+        print("Focus Channel, tap A")
+        pad.tap_channel("A")
+        time.sleep(0.6)
+        print("Load Ruby on GBA2 (Rom2 + Reset; Load ROM dialog if needed)")
+        session.load_ruby_rom()
+        print("Focus GBA2, tap A")
+        pad.tap_gba("A")
+    except (DolphinError, InputError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print("Input probe sent. Windows:")
     for title in session.window_titles():
         print(f"  window: {title}")
     return 0
