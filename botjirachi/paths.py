@@ -77,6 +77,10 @@ class HuntPaths:
         return (self.repo_root / "resources").resolve()
 
     @property
+    def dolphin_ini(self) -> Path:
+        return self.dolphin_user_dir / "Config" / "Dolphin.ini"
+
+    @property
     def gba_saves_dir(self) -> Path:
         return self.dolphin_user_dir / "GBA" / "Saves"
 

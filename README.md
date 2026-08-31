@@ -18,6 +18,6 @@ python3 -m botjirachi
 
 Requires the Channel ISO, Ruby GBA and original Ruby `.sav` under `resources/`, GBA BIOS at `~/Library/Application Support/Dolphin/GBA/gba_bios.bin`, and Dolphin at `/Applications/Dolphin.app`. Missing paths are listed on stderr (exit `1`).
 
-On a successful path check the original Ruby `.sav` is copied into Dolphin `GBA/Saves` as both `Pokemon - Edicion Rubi (Spain).sav` and `…-2.sav`. `resources/` is never written. The hunt loop itself is later plans; this command is the single entry point.
+On a successful path check the original Ruby `.sav` is copied into Dolphin `GBA/Saves` as both `Pokemon - Edicion Rubi (Spain).sav` and `…-2.sav`. `resources/` is never written. Then Dolphin boots Pokémon Channel with Port 2 empty (no GBA window). Grant Accessibility to Terminal/Python so the bot can use Dolphin menus (Port 2, Stop, Play). The hunt loop itself is later plans; this command is the single entry point.
 
 See `CLAUDE.md` for project conventions.

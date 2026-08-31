@@ -38,4 +38,5 @@ Automatización para cazar Jirachi shiny usando recursos de GameCube / GBA. Los 
 - Hunt (desde la raíz del repo): `python3 -m botjirachi`
 - Si faltan ISO, GBA, `.sav` original, BIOS GBA o el binario de Dolphin: error en stderr y exit `1`
 - Tras el check: copia el `.sav` original a las dos ranuras GBA de Dolphin; no escribe en `resources/`
+- Arranca Channel en Dolphin con el puerto 2 vacío; Ctrl+C no mata Dolphin. Accessibility de macOS para menús.
 - Detalle: `.claude/rules/toolchain.md`

@@ -6,6 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from botjirachi.dolphin import DolphinError, DolphinSession
 from botjirachi.paths import HuntPaths
 from botjirachi.restore import RestoreError, restore_ruby_save
 
@@ -74,6 +75,15 @@ def main(argv: list[str] | None = None) -> int:
     print("Restored original Ruby save to:")
     for dest in dests:
         print(f"  {dest}")
+    session = DolphinSession(paths)
+    try:
+        session.ensure_channel_booted()
+    except DolphinError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print("Channel running with Port 2 empty (no GBA window)")
+    for title in session.window_titles():
+        print(f"  window: {title}")
     return 0
 
 
