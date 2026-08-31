@@ -25,4 +25,4 @@ How we verify it.
 
 Name or link the **active** plan here when there is one.
 
-Active: none yet.
+Active: [jirachi-shiny-loop.md](jirachi-shiny-loop.md) (requirements only, not implementing yet).
