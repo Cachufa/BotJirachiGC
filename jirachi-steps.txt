@@ -1,0 +1,51 @@
+Jirachi from Pokémon Channel (Europe) + Ruby (Spain)
+====================================================
+
+Requirements
+------------
+- Pokémon Channel Europe, save with the game finished (Starlight Projector,
+  full Pichu Bros. episode, Jirachi unlocked in Options).
+- Pokémon Ruby (Spain), Hall of Fame entered, free slot in the party.
+  Channel language must match Ruby (Spanish).
+- Dolphin: GBA BIOS, Ruby .sav in GBA/Saves (including the -2.sav for port 2).
+- Channel .gci already in GC/EUR/Card A.
+
+Dolphin before you start
+------------------------
+- Controllers: Port 1 = GameCube pad, Port 2 = None (empty).
+- Do not auto-load the Ruby ROM.
+- Do not fullscreen the GBA window (macOS green button).
+
+Steps
+-----
+1. Close Dolphin completely, then open it again.
+2. Start Pokémon Channel (Europe). Only Channel should open (no GBA window).
+3. Title screen → Options (Opciones).
+4. Open Jirachi (it used to be ??? until Channel is cleared).
+5. Professor Oak / Jirachi intro. Answer Yes to send Jirachi to Ruby/Sapphire.
+6. Confirm Elite Four is beaten, and that the party has a free slot.
+7. When Channel asks to connect / turn on the GBA:
+   a. Controllers → Port 2 → GBA (Integrated). Keep Channel running.
+   b. The GBA window appears. Right-click → Load ROM.
+   c. Pick: resources/Pokemon - Edicion Rubi (Spain).gba
+8. On the GBA, Continue the Ruby save (do not start a new game).
+9. Follow Channel until the transfer finishes.
+10. On Ruby: check the party for Jirachi (OT CHANNEL, ID 40122, Lv 5).
+11. Save in Ruby (in-game save). That writes GBA/Saves/...-2.sav.
+
+If something fails
+------------------
+- GBA window at Channel boot: Port 2 is still GBA. Set it to None and restart.
+- New game on Ruby: you loaded the wrong save (need ...-2.sav). Restore the
+  original .sav from resources/ into GBA/Saves (both .sav and -2.sav).
+- Channel does not see the GBA: right-click the GBA window → Reset, or
+  change Port 2 to None and back to GBA (Integrated), then Load ROM again.
+- "Already received": this Ruby save already has the event flag. Need a
+  different Hall of Fame save (one Jirachi per Ruby save).
+- Ruby save not Hall of Fame / party full: Channel will refuse.
+
+Shiny note
+----------
+Channel Jirachi can be shiny (~1/8192). This list is only the in-game
+receive. Restoring the original Ruby .sav from resources/ before each
+attempt lets you retry; do not save over resources/ unless you mean to.
