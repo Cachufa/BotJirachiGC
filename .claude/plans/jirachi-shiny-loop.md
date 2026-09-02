@@ -1,11 +1,9 @@
 # Jirachi shiny loop (requirements)
 
-Status: **requirements only**. Do not implement until this spec is accepted.
-
 This file is the **umbrella** snapshot. Do not delete it.
 
 - **Number:** 00 (umbrella)
-- **Status:** requirements — not started
+- **Status:** done
 
 Work is split into:
 
@@ -19,7 +17,7 @@ Work is split into:
 | 06 | [parse-shiny-value.md](parse-shiny-value.md) | Party parse, SV 0..7 | done |
 | 07 | [logging.md](logging.md) | Terminal + files, resume attempt number | done |
 | 08 | [when-shiny.md](when-shiny.md) | Stop loop, summary, notify TODO | done |
-| 09 | [hunt-loop.md](hunt-loop.md) | Wire the pieces into the repeat loop | requirements — not started |
+| 09 | [hunt-loop.md](hunt-loop.md) | Wire the pieces into the repeat loop | done |
 
 ## Goal
 

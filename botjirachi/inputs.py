@@ -343,7 +343,12 @@ class PadDriver:
     def hold_channel(self, button: str, hold_s: float = 0.45) -> None:
         self.session.hold_keys_on_channel([self._channel_key(button)], hold_s=hold_s)
 
-    def hold_channel_stick(self, *directions: str, hold_s: float) -> None:
+    def hold_channel_stick(
+        self,
+        *directions: str,
+        hold_s: float,
+        refocus: bool = True,
+    ) -> None:
         """Hold analog stick (title cursor). Each arg is Up/Down/Left/Right."""
         if not directions:
             raise InputError("hold_channel_stick needs a direction")
@@ -355,7 +360,9 @@ class PadDriver:
                 raise InputError(
                     f"Channel stick has no direction {direction!r}"
                 ) from exc
-        self.session.hold_keys_on_channel(keys, hold_s=hold_s)
+        self.session.hold_keys_on_channel(
+            keys, hold_s=hold_s, refocus=refocus
+        )
 
     def hold_gba(self, button: str, hold_s: float = 0.45) -> None:
         self.session.hold_keys_on_gba([self._gba_key(button)], hold_s=hold_s)

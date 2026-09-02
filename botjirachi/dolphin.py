@@ -369,8 +369,17 @@ class DolphinSession:
             is_gba_port2_window, "GBA2", key, hold_s, fallback=is_gba_window, times=times
         )
 
-    def hold_keys_on_channel(self, keys: list[str], hold_s: float = 0.45) -> None:
+    def hold_keys_on_channel(
+        self,
+        keys: list[str],
+        hold_s: float = 0.45,
+        *,
+        refocus: bool = True,
+    ) -> None:
         """Hold Channel pad keys (analog stick for the title cursor)."""
+        if not refocus:
+            self._hold_keys_hid_only(keys, hold_s)
+            return
         self._dismiss_settings_windows()
         self._hold_keys_on_matching(is_channel_window, "Channel", keys, hold_s)
 
@@ -384,7 +393,7 @@ class DolphinSession:
         )
 
     def load_ruby_rom(self, timeout_s: float = 20) -> None:
-        """Set Rom2, turn on GBA port 2, Reset; Load ROM file dialog as fallback."""
+        """Set Rom2 and turn on GBA port 2. Load ROM file dialog only if needed."""
         self._write_rom2()
         if not self.has_gba_window():
             self.set_port2_gba()
@@ -392,8 +401,8 @@ class DolphinSession:
             self._wait_gba(present=True, timeout_s=8)
         if not self.gba_rom_loaded():
             self._load_rom_via_context_menu()
-        self._wait_gba_rom(timeout_s)
-        self.reset_gba()
+            self._wait_gba_rom(timeout_s)
+            self.reset_gba()
         self._wait_gba_rom(timeout_s)
 
     def reset_gba(self) -> None:
@@ -779,7 +788,7 @@ class DolphinSession:
         escaped = title.replace("\\", "\\\\").replace('"', '\\"')
         cx = x + max(w // 2, 8)
         cy = y + max(28 + (h - 28) // 2, 40)
-        hold = max(float(hold_s), 0.05)
+        hold = max(float(hold_s), 0.01)
         key_list = list(keys)
         hid_lead = 0.72
         as_delay = max(1.6, hid_lead + hold + 0.4)
@@ -824,6 +833,18 @@ class DolphinSession:
         )
         worker.join(timeout=as_delay + 2.0)
         self._raise_hid_error(hid_error)
+
+    def _hold_keys_hid_only(self, keys: list[str], hold_s: float) -> None:
+        """Press mapped keys with no window focus or osascript wait."""
+        from botjirachi.inputs import press_key, release_key
+
+        hold = max(float(hold_s), 0.01)
+        key_list = list(keys)
+        for key in key_list:
+            press_key(key)
+        time.sleep(hold)
+        for key in reversed(key_list):
+            release_key(key)
 
     def _raise_hid_error(self, hid_error: list[BaseException]) -> None:
         if not hid_error:

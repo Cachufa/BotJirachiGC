@@ -13,7 +13,12 @@ from botjirachi.inputs import InputError, PadDriver
 from botjirachi.party import SavError, jirachi_from_save
 from botjirachi.paths import HuntPaths
 from botjirachi.restore import RestoreError, restore_ruby_save
-from botjirachi.sequence import PAL_HZ, SequenceError, receive_jirachi
+from botjirachi.sequence import (
+    PAL_HZ,
+    SequenceError,
+    receive_jirachi,
+    recover_after_fail,
+)
 from botjirachi.shiny import handle_shiny
 
 
@@ -67,6 +72,13 @@ def build_parser() -> argparse.ArgumentParser:
             "Fake a shiny hit: log attempt + summary, skip restore and Dolphin, "
             "leave the working .sav as-is, exit 0"
         ),
+    )
+    parser.add_argument(
+        "--max-attempts",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Stop the hunt loop after N logged attempts (fail or shiny)",
     )
     return parser
 
@@ -122,40 +134,54 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 0
-    try:
-        dests = restore_ruby_save(paths)
-    except RestoreError as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
-    print("Restored original Ruby save to:")
-    for dest in dests:
-        print(f"  {dest}")
     session = DolphinSession(paths)
-    try:
-        session.ensure_channel_booted()
-    except DolphinError as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
-    print("Channel running with Port 2 empty (no GBA window)")
-    for title in session.window_titles():
-        print(f"  window: {title}")
-    if args.probe_inputs:
-        return probe_inputs(session)
-    started, next_attempt = hunt_log.prepare()
-    hunt_log.write_run_header(started, next_attempt)
-    if args.receive:
-        hz = args.pal_hz if args.pal_hz is not None else PAL_HZ
+    hz = args.pal_hz if args.pal_hz is not None else PAL_HZ
+    if args.probe_inputs or args.receive:
+        try:
+            dests = restore_ruby_save(paths)
+        except RestoreError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        print("Restored original Ruby save to:")
+        for dest in dests:
+            print(f"  {dest}")
+        try:
+            session.ensure_channel_booted()
+        except DolphinError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        print("Channel running with Port 2 empty (no GBA window)")
+        for title in session.window_titles():
+            print(f"  window: {title}")
+        if args.probe_inputs:
+            return probe_inputs(session)
+        started, next_attempt = hunt_log.prepare()
+        hunt_log.write_run_header(started, next_attempt)
         print(f"Receive: PAL {hz} Hz")
         return run_receive(session, hz, hunt_log)
-    print("Channel running with Port 2 empty. Use --receive for one transfer.")
-    return 0
+    started, next_attempt = hunt_log.prepare()
+    hunt_log.write_run_header(started, next_attempt)
+    print(f"Hunt loop: PAL {hz} Hz on boot; retries skip Hz")
+    try:
+        return run_hunt(
+            session,
+            hz,
+            hunt_log,
+            max_attempts=args.max_attempts,
+        )
+    except KeyboardInterrupt:
+        print(
+            "Interrupted; leaving Dolphin and saves as-is",
+            file=sys.stderr,
+        )
+        return 130
 
 
 def run_receive(session: DolphinSession, pal_hz: int, hunt_log: HuntLog) -> int:
     attempt = hunt_log.next_attempt_number()
     started_at = time.perf_counter()
     try:
-        sav = receive_jirachi(session, pal_hz=pal_hz)
+        sav = receive_jirachi(session, pal_hz=pal_hz, select_pal_hz=True)
     except (DolphinError, InputError, SequenceError) as exc:
         print(str(exc), file=sys.stderr)
         return 1
@@ -166,6 +192,91 @@ def run_receive(session: DolphinSession, pal_hz: int, hunt_log: HuntLog) -> int:
         attempt=attempt,
         started_at=started_at,
     )
+
+
+def run_hunt(
+    session: DolphinSession,
+    pal_hz: int,
+    hunt_log: HuntLog,
+    pad: PadDriver | None = None,
+    max_attempts: int | None = None,
+) -> int:
+    """Repeat receive until SV is 0..7. Restores only on the fail path."""
+    if pad is None:
+        pad = PadDriver(session)
+    select_pal_hz = True
+    try:
+        if session.has_gba_window():
+            recover_after_fail(session, pad)
+            select_pal_hz = False
+        else:
+            dests = restore_ruby_save(session.paths)
+            print("Restored original Ruby save to:")
+            for dest in dests:
+                print(f"  {dest}")
+            was_running = session.has_channel_window()
+            session.ensure_channel_booted()
+            select_pal_hz = not was_running
+            print("Channel running with Port 2 empty (no GBA window)")
+            for title in session.window_titles():
+                print(f"  window: {title}")
+    except (DolphinError, InputError, SequenceError, RestoreError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    logged = 0
+    while True:
+        attempt = hunt_log.next_attempt_number()
+        started_at = time.perf_counter()
+        print(
+            f"Attempt {attempt}: "
+            f"{'PAL Hz + title' if select_pal_hz else 'in-game, no Hz'}"
+        )
+        try:
+            sav = receive_jirachi(
+                session,
+                pad,
+                pal_hz=pal_hz,
+                select_pal_hz=select_pal_hz,
+            )
+        except (DolphinError, InputError, SequenceError) as exc:
+            print(str(exc), file=sys.stderr)
+            try:
+                recover_after_fail(session, pad)
+            except (DolphinError, InputError, SequenceError) as recover_exc:
+                print(str(recover_exc), file=sys.stderr)
+                return 1
+            select_pal_hz = False
+            continue
+        print(f"Receive: GBA on, no further inputs. Working save: {sav}")
+        code = report_jirachi_sv(
+            sav,
+            hunt_log=hunt_log,
+            attempt=attempt,
+            started_at=started_at,
+        )
+        if code != 0:
+            try:
+                recover_after_fail(session, pad)
+            except (DolphinError, InputError, SequenceError) as recover_exc:
+                print(str(recover_exc), file=sys.stderr)
+                return 1
+            select_pal_hz = False
+            continue
+        if hunt_log.last_logged_result() == "shiny":
+            return 0
+        logged += 1
+        try:
+            recover_after_fail(session, pad)
+        except (DolphinError, InputError, SequenceError) as recover_exc:
+            print(str(recover_exc), file=sys.stderr)
+            return 1
+        print("Fail path done. Windows:")
+        for title in session.window_titles():
+            print(f"  window: {title}")
+        select_pal_hz = False
+        if max_attempts is not None and logged >= max_attempts:
+            print(f"Stopped after {logged} attempt(s) (--max-attempts)")
+            return 0
 
 
 def run_parse_sv(sav: Path) -> int:

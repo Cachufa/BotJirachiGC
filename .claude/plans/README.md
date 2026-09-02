@@ -25,7 +25,7 @@ How we verify it.
 
 Name or link the **active** plan here when there is one.
 
-Umbrella (do not delete): [jirachi-shiny-loop.md](jirachi-shiny-loop.md) — **00**, status: **requirements — not started**.
+Umbrella (do not delete): [jirachi-shiny-loop.md](jirachi-shiny-loop.md) — **00**, status: **done**.
 
 Split (implement in this order). Status values: `requirements — not started` → `in progress` → `done`.
 
@@ -39,6 +39,6 @@ Split (implement in this order). Status values: `requirements — not started` �
 | 06 | [parse-shiny-value.md](parse-shiny-value.md) | done |
 | 07 | [logging.md](logging.md) | done |
 | 08 | [when-shiny.md](when-shiny.md) | done |
-| 09 | [hunt-loop.md](hunt-loop.md) | requirements — not started |
+| 09 | [hunt-loop.md](hunt-loop.md) | done |
 
-Active: next is [hunt-loop.md](hunt-loop.md). Plan 08: shiny stop + `logs/shiny.txt` + `notify_shiny` stub; `--force-shiny` skips restore.
+Active: none (01–09 done). Default `python3 -m botjirachi` loops until shiny.

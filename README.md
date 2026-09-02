@@ -18,7 +18,7 @@ python3 -m botjirachi
 
 Requires the Channel ISO, Ruby GBA and original Ruby `.sav` under `resources/`, GBA BIOS at `~/Library/Application Support/Dolphin/GBA/gba_bios.bin`, and Dolphin at `/Applications/Dolphin.app`. Missing paths are listed on stderr (exit `1`).
 
-On a successful path check the original Ruby `.sav` is copied into Dolphin `GBA/Saves` as both `Pokemon - Edicion Rubi (Spain).sav` and `…-2.sav`. `resources/` is never written. Then Dolphin boots Pokémon Channel with Port 2 empty (no GBA window).
+On a successful path check the original Ruby `.sav` is copied into Dolphin `GBA/Saves` as both `Pokemon - Edicion Rubi (Spain).sav` and `…-2.sav` (except on the fail-retry path, which turns the GBA off first). `resources/` is never written. Then Dolphin boots Pokémon Channel with Port 2 empty (no GBA window).
 
 Needs **pynput** (`pip3 install pynput` if you are not using the package metadata).
 
@@ -36,6 +36,6 @@ Each completed `--receive` writes the same attempt line to stdout and `logs/atte
 
 If SV is 0..7, the receive path **stops**: it does not restore the original Ruby save, appends a summary to stdout and `logs/shiny.txt` (`attempts`, `total_s`, `sv`, working `-2.sav` path), calls a notify stub (`notify_shiny`; Discord later), and exits `0`. `--force-shiny` runs that same path without restore or Dolphin (leaves the working `.sav` as-is). Relaunching after a logged shiny also skips restore so the working `.sav` is not overwritten.
 
-The hunt loop itself is later plans; `python3 -m botjirachi` is the single entry point.
+`python3 -m botjirachi` (no flags) repeats receive until SV is 0..7. After a fail it turns Port 2 off, taps Channel A three times, waits 1 s, then restores the original Ruby `.sav`. Retries skip the PAL 50/60 Hz prompt (Channel stays in-game). Ctrl+C leaves Dolphin and the saves as they are. `--receive` is still one transfer from a Channel reset + Hz prompt.
 
 See `CLAUDE.md` for project conventions.
