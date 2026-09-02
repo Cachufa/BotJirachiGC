@@ -1,41 +1,74 @@
 # BotJirachiGC
 
-Bot for shiny hunting Jirachi (Pokémon Channel + Pokémon Ruby).
+Shiny hunt Jirachi via **Pokémon Channel (Europe)** + **Pokémon Ruby (Spain)** in Dolphin.
 
-Game dumps (ISO, GBA, SAV, GCI) belong in `resources/` and are gitignored. Do not commit them.
+## Start
 
-Save editor (web, no install): [PKMDS](https://pkmds.app/) — PKHeX.Core in the browser. Alternative: [PKHeX.Everywhere](https://pkhex-web.github.io/). Use these for the Ruby `.sav`; Pokémon Channel `.gci` is not a main-series save.
-
-GBA timing: Port 2 starts empty so the GBA window does not open with Channel. When Channel asks to turn the GBA on, Controllers → Port 2 → GBA (Integrated), then in the GBA window Load ROM → `resources/Pokemon - Edicion Rubi (Spain).gba`.
-
-## Run
-
-From the repo root:
+From the repo root (venv if you use one):
 
 ```bash
 python3 -m botjirachi
 ```
 
-Requires the Channel ISO, Ruby GBA and original Ruby `.sav` under `resources/`, GBA BIOS at `~/Library/Application Support/Dolphin/GBA/gba_bios.bin`, and Dolphin at `/Applications/Dolphin.app`. Missing paths are listed on stderr (exit `1`).
+```bash
+.venv/bin/python -m botjirachi
+```
 
-On a successful path check the original Ruby `.sav` is copied into Dolphin `GBA/Saves` as both `Pokemon - Edicion Rubi (Spain).sav` and `…-2.sav` (except on the fail-retry path, which turns the GBA off first). `resources/` is never written. Then Dolphin boots Pokémon Channel with Port 2 empty (no GBA window).
+That is the hunt: it repeats Channel → Ruby until Jirachi’s shiny value is **0..7**. No attempt cap. **Ctrl+C** stops the bot and leaves Dolphin and the saves as they are.
 
-Needs **pynput** (`pip3 install pynput` if you are not using the package metadata).
+Needs macOS **Accessibility** for the app that launches the command (Terminal, iTerm, Python, or Grok): System Settings → Privacy & Security → Accessibility.
 
-**Accessibility:** System Settings → Privacy & Security → Accessibility → enable the app that runs this command (Terminal, iTerm, Python, or Grok). The bot uses it for Dolphin menus (Port 2, Stop, Play) **and** for keyboard/mouse events. Dolphin Background Input is off, so the Channel render window or the GBA window must be focused before keys.
+## What one attempt does
 
-Pad maps (from `GCPadNew.ini` / `GBA.ini`, not unified): Channel A=`X`, B=`Z`, Start=`Return`; GBA port 2 A=`1`, B=`2`, Start=`6`.
+1. Boot Channel with Port 2 empty (no GBA window). First boot also picks PAL **60 Hz**.
+2. Title → Opciones → Jirachi → Oak prompts (timed pads, not RAM).
+3. When Channel asks to turn the GBA on: Port 2 = GBA (Integrated). Rom2 auto-loads Ruby. No extra GBA Reset / right-click if the ROM is already loaded.
+4. Wait until the port-2 `.sav` updates (~17 s). Parse the party Jirachi (OT CHANNEL, TID 40122). Shiny iff SV is 0..7.
 
-`--probe-inputs` focuses Channel, taps A (`X`), enables GBA on Port 2 (`Rom2` auto-loads Ruby), then focuses GBA2 and taps A (`1`).
+**Fail (not shiny):** Port 2 None (turn off GBA) → Channel **A × 3** → wait 1 s → copy the original Ruby `.sav` onto both Dolphin GBA slots. Next attempt **skips 60 Hz**. On the Options 2×2 it nudges the stick **Up 0.02 s** (HID only) so the cursor hits Jirachi, then the same menus again.
 
-`--receive` runs one timed Channel → Ruby Jirachi receive (title → Options → Jirachi → GBA at the prompt → transfer). Delays live in `botjirachi/sequence.py`. After the transfer it parses the Port 2 `.sav` and prints Jirachi SV (shiny iff 0..7).
+**Shiny:** stop. Do **not** restore. Log a summary. `notify_shiny` is a stub (Discord later). Exit `0`. A later launch also skips restore if the last log line is `result=shiny`.
 
-`--parse-sv` reads a Ruby `.sav` and prints Jirachi SV without restoring the save or starting Dolphin. Default file is Dolphin `GBA/Saves/…-2.sav`; pass a path to parse another file. Missing Jirachi is an error.
+`resources/` is never written. Only Dolphin `GBA/Saves/` is overwritten on fail.
 
-Each completed `--receive` writes the same attempt line to stdout and `logs/attempts.txt` (`attempt`, `duration_s`, `sv`, `result=fail|shiny`). The file is append-only; a restart continues `attempt` from the last line and keeps `logs/hunt_started.txt`. `--parse-sv` does not write an attempt.
+## Logs
 
-If SV is 0..7, the receive path **stops**: it does not restore the original Ruby save, appends a summary to stdout and `logs/shiny.txt` (`attempts`, `total_s`, `sv`, working `-2.sav` path), calls a notify stub (`notify_shiny`; Discord later), and exits `0`. `--force-shiny` runs that same path without restore or Dolphin (leaves the working `.sav` as-is). Relaunching after a logged shiny also skips restore so the working `.sav` is not overwritten.
+Same attempt line on stdout and `logs/attempts.txt` (append-only):
 
-`python3 -m botjirachi` (no flags) repeats receive until SV is 0..7. After a fail it turns Port 2 off, taps Channel A three times, waits 1 s, then restores the original Ruby `.sav`. Retries skip the PAL 50/60 Hz prompt (Channel stays in-game). Ctrl+C leaves Dolphin and the saves as they are. `--receive` is still one transfer from a Channel reset + Hz prompt.
+```
+2026-09-02T14:54:06Z  attempt=5  duration_s=129.6  sv=38123  result=fail
+```
+
+Restart continues `attempt` from that file. `logs/hunt_started.txt` is the wall-clock hunt start (not reset). A shiny also appends `logs/shiny.txt`.
+
+## Other commands
+
+| Flag | What |
+|------|------|
+| `--receive` | One transfer only (Channel reset + 60 Hz), then parse SV |
+| `--parse-sv [SAV]` | Parse Jirachi SV only (default: Dolphin `…-2.sav`). No restore, no Dolphin |
+| `--force-shiny` | Fake a shiny hit: logs + stub notify, no restore, no Dolphin |
+| `--probe-inputs` | Tap Channel A, load Ruby on GBA2, tap GBA A |
+| `--max-attempts N` | Stop after N logged attempts (testing). Default hunt has no cap |
+| `--pal-hz 50\|60` | PAL boot Hz (default 60) |
+| `--iso` `--gba` `--sav` `--bios` `--dolphin` `--dolphin-user-dir` | Path overrides |
+
+Missing ISO / GBA / original `.sav` / GBA BIOS / Dolphin binary: all missing paths on stderr, exit `1`.
+
+## Requirements
+
+- Python 3.10+ and **pynput** (`pip3 install pynput`, or the project venv).
+- Dumps in `resources/` (gitignored; do not commit them):
+  - `Pokemon Channel (Europe) (En,Fr,De,Es,It) (v1.00).iso`
+  - `Pokemon - Edicion Rubi (Spain).gba`
+  - `Pokemon - Edicion Rubi (Spain).sav` — Hall of Fame, free party slot. Never overwritten.
+- Channel `.gci` already in Dolphin `GC/EUR/Card A/`.
+- GBA BIOS: `~/Library/Application Support/Dolphin/GBA/gba_bios.bin`
+- Dolphin: `/Applications/Dolphin.app`
+- Controllers → Common → **Background Input** on (so GBA2 gets keys). Do not pass `SIDevice` on the Dolphin command line (it blocks live Port 2 changes).
+
+Pad maps (`GCPadNew.ini` / `GBA.ini`): Channel A=`X`; GBA2 A=`1` (number row, not numpad).
+
+Save editors for the Ruby `.sav`: [PKMDS](https://pkmds.app/), [PKHeX.Everywhere](https://pkhex-web.github.io/). Channel `.gci` is not a main-series save.
 
 See `CLAUDE.md` for project conventions.
