@@ -21,9 +21,8 @@ from botjirachi.sequence import (
 )
 from botjirachi.shiny import handle_shiny
 
-# If Channel/GBA desyncs, in-game recover is not enough. After this many
-# consecutive sv=-1 (miss) attempts, kill Dolphin and boot Channel again.
-CONSECUTIVE_MISS_RESTART = 5
+# If Channel/GBA desyncs, in-game recover is not enough. Any sv=-1 (miss)
+# kills Dolphin and boots Channel again.
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -228,7 +227,6 @@ def run_hunt(
         print(str(exc), file=sys.stderr)
         return 1
     logged = 0
-    consecutive_misses = hunt_log.consecutive_sv(-1)
     while True:
         attempt = hunt_log.next_attempt_number()
         started_at = time.perf_counter()
@@ -246,16 +244,12 @@ def run_hunt(
         except (DolphinError, InputError, SequenceError) as exc:
             print(str(exc), file=sys.stderr)
             log_missed_attempt(hunt_log, attempt=attempt, started_at=started_at)
-            consecutive_misses += 1
             try:
-                select_pal_hz = recover_or_reboot_dolphin(
-                    session, pad, consecutive_misses
-                )
+                reboot_after_miss(session)
             except (DolphinError, InputError, SequenceError, RestoreError) as recover_exc:
                 print(str(recover_exc), file=sys.stderr)
                 return 1
-            if select_pal_hz:
-                consecutive_misses = 0
+            select_pal_hz = True
             logged += 1
             if max_attempts is not None and logged >= max_attempts:
                 print(f"Stopped after {logged} attempt(s) (--max-attempts)")
@@ -271,22 +265,17 @@ def run_hunt(
         if hunt_log.last_logged_result() == "shiny":
             return 0
         if code != 0:
-            consecutive_misses += 1
             try:
-                select_pal_hz = recover_or_reboot_dolphin(
-                    session, pad, consecutive_misses
-                )
+                reboot_after_miss(session)
             except (DolphinError, InputError, SequenceError, RestoreError) as recover_exc:
                 print(str(recover_exc), file=sys.stderr)
                 return 1
-            if select_pal_hz:
-                consecutive_misses = 0
+            select_pal_hz = True
             logged += 1
             if max_attempts is not None and logged >= max_attempts:
                 print(f"Stopped after {logged} attempt(s) (--max-attempts)")
                 return 0
             continue
-        consecutive_misses = 0
         logged += 1
         try:
             recover_after_fail(session, pad)
@@ -322,24 +311,9 @@ def run_force_shiny(paths: HuntPaths) -> int:
     )
 
 
-def recover_or_reboot_dolphin(
-    session: DolphinSession,
-    pad: PadDriver,
-    consecutive_misses: int,
-) -> bool:
-    """In-game fail recover, or kill Dolphin after consecutive sv=-1 misses.
-
-    Returns True if Channel was rebooted (next receive must pick PAL Hz).
-    The caller must reset its miss streak after a reboot so the next five
-    misses can recover in-game before another kill.
-    """
-    if consecutive_misses < CONSECUTIVE_MISS_RESTART:
-        recover_after_fail(session, pad)
-        return False
-    print(
-        f"{consecutive_misses} consecutive misses (sv=-1); "
-        "killing Dolphin and rebooting Channel"
-    )
+def reboot_after_miss(session: DolphinSession) -> None:
+    """Kill Dolphin after sv=-1 (miss), restore the Ruby save, boot Channel."""
+    print("Miss (sv=-1); killing Dolphin and rebooting Channel")
     session.kill()
     dests = restore_ruby_save(session.paths)
     print("Restored original Ruby save to:")
@@ -349,7 +323,6 @@ def recover_or_reboot_dolphin(
     print("Channel running with Port 2 empty (no GBA window)")
     for title in session.window_titles():
         print(f"  window: {title}")
-    return True
 
 
 def log_missed_attempt(
