@@ -32,6 +32,8 @@ Pad maps (from `GCPadNew.ini` / `GBA.ini`, not unified): Channel A=`X`, B=`Z`, S
 
 `--parse-sv` reads a Ruby `.sav` and prints Jirachi SV without restoring the save or starting Dolphin. Default file is Dolphin `GBA/Saves/…-2.sav`; pass a path to parse another file. Missing Jirachi is an error.
 
+Each completed `--receive` writes the same attempt line to stdout and `logs/attempts.txt` (`attempt`, `duration_s`, `sv`, `result=fail|shiny`). The file is append-only; a restart continues `attempt` from the last line and keeps `logs/hunt_started.txt`. `--parse-sv` does not write an attempt.
+
 The hunt loop itself is later plans; `python3 -m botjirachi` is the single entry point.
 
 See `CLAUDE.md` for project conventions.

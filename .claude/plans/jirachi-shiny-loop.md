@@ -17,7 +17,7 @@ Work is split into:
 | 04 | [inputs-macos.md](inputs-macos.md) | Keyboard, window focus, Load ROM | done |
 | 05 | [channel-gba-sequence.md](channel-gba-sequence.md) | Timed Channel → GBA transfer + Ruby save | done |
 | 06 | [parse-shiny-value.md](parse-shiny-value.md) | Party parse, SV 0..7 | done |
-| 07 | [logging.md](logging.md) | Terminal + files, resume attempt number | requirements — not started |
+| 07 | [logging.md](logging.md) | Terminal + files, resume attempt number | done |
 | 08 | [when-shiny.md](when-shiny.md) | Stop loop, summary, notify TODO | requirements — not started |
 | 09 | [hunt-loop.md](hunt-loop.md) | Wire the pieces into the repeat loop | requirements — not started |
 

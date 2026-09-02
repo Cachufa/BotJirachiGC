@@ -37,8 +37,8 @@ Split (implement in this order). Status values: `requirements — not started` �
 | 04 | [inputs-macos.md](inputs-macos.md) | done |
 | 05 | [channel-gba-sequence.md](channel-gba-sequence.md) | done |
 | 06 | [parse-shiny-value.md](parse-shiny-value.md) | done |
-| 07 | [logging.md](logging.md) | requirements — not started |
+| 07 | [logging.md](logging.md) | done |
 | 08 | [when-shiny.md](when-shiny.md) | requirements — not started |
 | 09 | [hunt-loop.md](hunt-loop.md) | requirements — not started |
 
-Active: next is [logging.md](logging.md). Plan 06: Channel Jirachi on `-2.sav` → SV=63216; original save errors (no Jirachi).
+Active: next is [when-shiny.md](when-shiny.md). Plan 07: stdout + `logs/attempts.txt`, resume `attempt` from the file, persist `logs/hunt_started.txt`.

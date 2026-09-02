@@ -1,7 +1,7 @@
 # 7. Logging
 
 - **Number:** 07 / 09
-- **Status:** requirements — not started
+- **Status:** done
 - **Parent:** [jirachi-shiny-loop.md](jirachi-shiny-loop.md)
 
 ## Goal
@@ -20,12 +20,14 @@ Resume: last `attempt=N` → next is `N+1`; missing file → 1. Resume does **no
 
 Shiny extra file: [when-shiny.md](when-shiny.md).
 
+Implemented in `botjirachi/huntlog.py`. CLI: after a path check, persist `logs/hunt_started.txt` and print a stdout-only header (`started`, `next_attempt`, log path). `--receive` appends one attempt line to stdout and `logs/attempts.txt` after SV is parsed. `--parse-sv` does not log an attempt.
+
 ## Steps
 
-- [ ] Dual write (print + append).
-- [ ] Parse last attempt on startup.
-- [ ] Persist hunt start timestamp.
-- [ ] Run header optional; no secrets.
+- [x] Dual write (print + append).
+- [x] Parse last attempt on startup.
+- [x] Persist hunt start timestamp.
+- [x] Run header optional; no secrets.
 
 ## Out of scope
 
