@@ -14,6 +14,7 @@ from botjirachi.party import SavError, jirachi_from_save
 from botjirachi.paths import HuntPaths
 from botjirachi.restore import RestoreError, restore_ruby_save
 from botjirachi.sequence import PAL_HZ, SequenceError, receive_jirachi
+from botjirachi.shiny import handle_shiny
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -59,6 +60,14 @@ def build_parser() -> argparse.ArgumentParser:
             "(default: Dolphin port-2 -2.sav). Skips restore and Dolphin."
         ),
     )
+    parser.add_argument(
+        "--force-shiny",
+        action="store_true",
+        help=(
+            "Fake a shiny hit: log attempt + summary, skip restore and Dolphin, "
+            "leave the working .sav as-is, exit 0"
+        ),
+    )
     return parser
 
 
@@ -98,11 +107,21 @@ def main(argv: list[str] | None = None) -> int:
     if args.parse_sv is not None:
         sav = Path(args.parse_sv).expanduser() if args.parse_sv else paths.dolphin_ruby_sav_port2
         return run_parse_sv(sav.resolve())
+    if args.force_shiny:
+        return run_force_shiny(paths)
     missing = paths.missing()
     if missing:
         report_missing(missing)
         return 1
     print_header(paths)
+    hunt_log = HuntLog(paths.logs_dir)
+    if hunt_log.last_logged_result() == "shiny" and not args.probe_inputs:
+        print(
+            "Shiny already logged; not restoring the working Ruby save. "
+            f"See {hunt_log.shiny_path}",
+            file=sys.stderr,
+        )
+        return 0
     try:
         dests = restore_ruby_save(paths)
     except RestoreError as exc:
@@ -122,7 +141,6 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  window: {title}")
     if args.probe_inputs:
         return probe_inputs(session)
-    hunt_log = HuntLog(paths.logs_dir)
     started, next_attempt = hunt_log.prepare()
     hunt_log.write_run_header(started, next_attempt)
     if args.receive:
@@ -155,6 +173,21 @@ def run_parse_sv(sav: Path) -> int:
     return report_jirachi_sv(sav)
 
 
+def run_force_shiny(paths: HuntPaths) -> int:
+    """Shiny path without restore or Dolphin. Does not touch the working .sav."""
+    hunt_log = HuntLog(paths.logs_dir)
+    started, next_attempt = hunt_log.prepare()
+    hunt_log.write_run_header(started, next_attempt)
+    print("Force shiny: skipping restore and Dolphin")
+    return handle_shiny(
+        hunt_log,
+        attempt=next_attempt,
+        duration_s=0.0,
+        sv=0,
+        save_path=paths.dolphin_ruby_sav_port2,
+    )
+
+
 def report_jirachi_sv(
     sav: Path,
     hunt_log: HuntLog | None = None,
@@ -173,11 +206,20 @@ def report_jirachi_sv(
         f"sv={mon.shiny_value}  shiny={mon.is_shiny}"
     )
     if hunt_log is not None and attempt is not None and started_at is not None:
+        duration_s = time.perf_counter() - started_at
+        if mon.is_shiny:
+            return handle_shiny(
+                hunt_log,
+                attempt=attempt,
+                duration_s=duration_s,
+                sv=mon.shiny_value,
+                save_path=sav,
+            )
         hunt_log.write_attempt(
             attempt=attempt,
-            duration_s=time.perf_counter() - started_at,
+            duration_s=duration_s,
             sv=mon.shiny_value,
-            result="shiny" if mon.is_shiny else "fail",
+            result="fail",
         )
     return 0
 

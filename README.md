@@ -34,6 +34,8 @@ Pad maps (from `GCPadNew.ini` / `GBA.ini`, not unified): Channel A=`X`, B=`Z`, S
 
 Each completed `--receive` writes the same attempt line to stdout and `logs/attempts.txt` (`attempt`, `duration_s`, `sv`, `result=fail|shiny`). The file is append-only; a restart continues `attempt` from the last line and keeps `logs/hunt_started.txt`. `--parse-sv` does not write an attempt.
 
+If SV is 0..7, the receive path **stops**: it does not restore the original Ruby save, appends a summary to stdout and `logs/shiny.txt` (`attempts`, `total_s`, `sv`, working `-2.sav` path), calls a notify stub (`notify_shiny`; Discord later), and exits `0`. `--force-shiny` runs that same path without restore or Dolphin (leaves the working `.sav` as-is). Relaunching after a logged shiny also skips restore so the working `.sav` is not overwritten.
+
 The hunt loop itself is later plans; `python3 -m botjirachi` is the single entry point.
 
 See `CLAUDE.md` for project conventions.

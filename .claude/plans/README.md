@@ -38,7 +38,7 @@ Split (implement in this order). Status values: `requirements — not started` �
 | 05 | [channel-gba-sequence.md](channel-gba-sequence.md) | done |
 | 06 | [parse-shiny-value.md](parse-shiny-value.md) | done |
 | 07 | [logging.md](logging.md) | done |
-| 08 | [when-shiny.md](when-shiny.md) | requirements — not started |
+| 08 | [when-shiny.md](when-shiny.md) | done |
 | 09 | [hunt-loop.md](hunt-loop.md) | requirements — not started |
 
-Active: next is [when-shiny.md](when-shiny.md). Plan 07: stdout + `logs/attempts.txt`, resume `attempt` from the file, persist `logs/hunt_started.txt`.
+Active: next is [hunt-loop.md](hunt-loop.md). Plan 08: shiny stop + `logs/shiny.txt` + `notify_shiny` stub; `--force-shiny` skips restore.

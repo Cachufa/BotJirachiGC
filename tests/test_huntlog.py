@@ -10,9 +10,12 @@ from tempfile import TemporaryDirectory
 
 from botjirachi.huntlog import (
     HuntLog,
+    format_shiny_summary,
     format_utc,
     last_attempt_number,
+    last_attempt_result,
     result_for_sv,
+    total_hunt_seconds,
 )
 
 
@@ -28,6 +31,14 @@ class LastAttemptTests(unittest.TestCase):
             "2026-08-31T18:01:12Z  attempt=2  duration_s=40.8  sv=3  result=shiny\n"
         )
         self.assertEqual(last_attempt_number(text), 2)
+        self.assertEqual(last_attempt_result(text), "shiny")
+        self.assertIsNone(last_attempt_result("# hunt start\nmalformed line\n"))
+        self.assertEqual(
+            last_attempt_result(
+                "2026-08-31T18:00:00Z  attempt=1  duration_s=42.1  sv=1842  result=fail\n"
+            ),
+            "fail",
+        )
 
 
 class ResultTests(unittest.TestCase):
@@ -135,6 +146,56 @@ class HuntLogTests(unittest.TestCase):
         self.assertNotIn("password", header.lower())
         self.assertNotIn("secret", header.lower())
 
+    def test_shiny_summary_dual_write_and_append(self) -> None:
+        when = datetime(2026, 8, 31, 20, 15, tzinfo=timezone.utc)
+        save = Path("/tmp/Pokemon - Edicion Rubi (Spain)-2.sav")
+        line = self.log.write_shiny_summary(
+            attempts=812,
+            total_s=28940.2,
+            sv=4,
+            save=save,
+            when=when,
+        )
+        expected = (
+            "SHINY  2026-08-31T20:15:00Z  attempts=812  "
+            "total_s=28940.2  sv=4  "
+            "save=/tmp/Pokemon - Edicion Rubi (Spain)-2.sav"
+        )
+        self.assertEqual(line, expected)
+        self.assertEqual(format_shiny_summary(
+            when=when,
+            attempts=812,
+            total_s=28940.2,
+            sv=4,
+            save=save,
+        ), expected)
+        self.assertEqual(self.stdout.getvalue().strip(), expected)
+        self.assertEqual(
+            self.log.shiny_path.read_text(encoding="utf-8").strip(),
+            expected,
+        )
+        self.log.write_shiny_summary(
+            attempts=813,
+            total_s=1.0,
+            sv=0,
+            save=save,
+            when=when,
+        )
+        self.assertEqual(
+            len(self.log.shiny_path.read_text(encoding="utf-8").splitlines()),
+            2,
+        )
+
+    def test_total_hunt_seconds_includes_gaps(self) -> None:
+        started = datetime(2026, 8, 31, 12, 0, tzinfo=timezone.utc)
+        when = datetime(2026, 8, 31, 20, 15, tzinfo=timezone.utc)
+        self.assertAlmostEqual(total_hunt_seconds(started, when), 29700.0)
+        self.assertEqual(
+            total_hunt_seconds(when, started),
+            0.0,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
+

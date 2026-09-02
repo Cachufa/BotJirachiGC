@@ -17,9 +17,11 @@ from botjirachi.party import SHINY_SV_MAX
 
 ATTEMPTS_NAME = "attempts.txt"
 HUNT_STARTED_NAME = "hunt_started.txt"
+SHINY_NAME = "shiny.txt"
 
 # One field in the attempt line: `attempt=12` bounded by start/whitespace.
 _ATTEMPT_RE = re.compile(r"(?:^|\s)attempt=(\d+)(?:\s|$)")
+_RESULT_RE = re.compile(r"(?:^|\s)result=(\S+)(?:\s|$)")
 
 
 def utc_now() -> datetime:
@@ -59,6 +61,26 @@ def last_attempt_number(text: str) -> int | None:
     return last
 
 
+def last_attempt_result(text: str) -> str | None:
+    """`result=` on the last attempt line. Headers and malformed lines are ignored."""
+    last: str | None = None
+    for line in text.splitlines():
+        if not _ATTEMPT_RE.search(line):
+            continue
+        match = _RESULT_RE.search(line)
+        if match:
+            last = match.group(1)
+    return last
+
+
+def total_hunt_seconds(started: datetime, when: datetime) -> float:
+    """Wall-clock seconds from hunt start to `when`, including session gaps."""
+    delta = (
+        when.astimezone(timezone.utc) - started.astimezone(timezone.utc)
+    ).total_seconds()
+    return max(0.0, delta)
+
+
 def format_attempt_line(
     *,
     when: datetime,
@@ -73,6 +95,20 @@ def format_attempt_line(
     )
 
 
+def format_shiny_summary(
+    *,
+    when: datetime,
+    attempts: int,
+    total_s: float,
+    sv: int,
+    save: Path,
+) -> str:
+    return (
+        f"SHINY  {format_utc(when)}  attempts={attempts}  "
+        f"total_s={total_s:.1f}  sv={sv}  save={save}"
+    )
+
+
 class HuntLog:
     """Dual-write attempt logger. Never truncates `attempts.txt`."""
 
@@ -80,6 +116,7 @@ class HuntLog:
         self.log_dir = log_dir
         self.attempts_path = log_dir / ATTEMPTS_NAME
         self.hunt_started_path = log_dir / HUNT_STARTED_NAME
+        self.shiny_path = log_dir / SHINY_NAME
         self._stdout = sys.stdout if stdout is None else stdout
 
     def prepare(self) -> tuple[datetime, int]:
@@ -111,6 +148,10 @@ class HuntLog:
     def next_attempt_number(self) -> int:
         last = self._last_attempt_from_file()
         return 1 if last is None else last + 1
+
+    def last_logged_result(self) -> str | None:
+        text = self._attempts_text()
+        return None if text is None else last_attempt_result(text)
 
     def write_run_header(self, started: datetime, next_attempt: int) -> None:
         """Stdout-only. Do not log secrets or dump paths here."""
@@ -145,11 +186,38 @@ class HuntLog:
             fh.flush()
         return line
 
-    def _last_attempt_from_file(self) -> int | None:
+    def write_shiny_summary(
+        self,
+        *,
+        attempts: int,
+        total_s: float,
+        sv: int,
+        save: Path,
+        when: datetime | None = None,
+    ) -> str:
+        """Print and append the same SHINY summary. Never truncates the file."""
+        self.log_dir.mkdir(parents=True, exist_ok=True)
+        line = format_shiny_summary(
+            when=when if when is not None else utc_now(),
+            attempts=attempts,
+            total_s=total_s,
+            sv=sv,
+            save=save,
+        )
+        print(line, file=self._stdout, flush=True)
+        with self.shiny_path.open("a", encoding="utf-8", newline="\n") as fh:
+            fh.write(line + "\n")
+            fh.flush()
+        return line
+
+    def _attempts_text(self) -> str | None:
         if not self.attempts_path.is_file():
             return None
         try:
-            text = self.attempts_path.read_text(encoding="utf-8")
+            return self.attempts_path.read_text(encoding="utf-8")
         except OSError:
             return None
-        return last_attempt_number(text)
+
+    def _last_attempt_from_file(self) -> int | None:
+        text = self._attempts_text()
+        return None if text is None else last_attempt_number(text)
