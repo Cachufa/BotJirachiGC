@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from botjirachi.__main__ import run_hunt
 from botjirachi.huntlog import HuntLog
-from botjirachi.party import PartyMon
+from botjirachi.party import PartyMon, SavError
 from botjirachi.sequence import (
     FAIL_A_BETWEEN_S,
     FAIL_A_TIMES,
@@ -81,6 +81,7 @@ class ReceivePalHzTests(unittest.TestCase):
             receive_jirachi(session, pad, select_pal_hz=False)
         session.reset_emulation.assert_not_called()
         pal.assert_not_called()
+        session.set_port2_none.assert_called()
 
     def test_resets_and_selects_pal_by_default(self) -> None:
         session = MagicMock()
@@ -183,6 +184,37 @@ class HuntLoopTests(unittest.TestCase):
             self.assertIn("result=shiny", attempts)
             self.assertTrue(hunt_log.shiny_path.is_file())
             self.assertEqual(sav.read_bytes(), b"working")
+
+    def test_missing_jirachi_logs_miss_then_continues(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sav = root / "port2.sav"
+            sav.write_bytes(b"working")
+            session = MagicMock()
+            session.paths.dolphin_ruby_sav_port2 = sav
+            session.has_gba_window.return_value = True
+            pad = MagicMock()
+            hunt_log = HuntLog(root / "logs", stdout=io.StringIO())
+            shiny = _mon(personality=0, tid=0, sid=0)
+            with (
+                patch("botjirachi.__main__.recover_after_fail"),
+                patch(
+                    "botjirachi.__main__.receive_jirachi",
+                    return_value=sav,
+                ),
+                patch(
+                    "botjirachi.__main__.jirachi_from_save",
+                    side_effect=[SavError("No Jirachi"), shiny],
+                ),
+            ):
+                code = run_hunt(session, 60, hunt_log, pad=pad)
+            self.assertEqual(code, 0)
+            attempts = hunt_log.attempts_path.read_text(encoding="utf-8")
+            self.assertIn("attempt=1", attempts)
+            self.assertIn("sv=-1", attempts)
+            self.assertIn("result=miss", attempts)
+            self.assertIn("result=shiny", attempts)
+            self.assertIn("duration_s=", attempts)
 
     def test_does_not_recover_after_shiny_on_first_hit(self) -> None:
         with TemporaryDirectory() as tmp:

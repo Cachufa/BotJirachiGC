@@ -240,12 +240,17 @@ def run_hunt(
             )
         except (DolphinError, InputError, SequenceError) as exc:
             print(str(exc), file=sys.stderr)
+            log_missed_attempt(hunt_log, attempt=attempt, started_at=started_at)
             try:
                 recover_after_fail(session, pad)
             except (DolphinError, InputError, SequenceError) as recover_exc:
                 print(str(recover_exc), file=sys.stderr)
                 return 1
+            logged += 1
             select_pal_hz = False
+            if max_attempts is not None and logged >= max_attempts:
+                print(f"Stopped after {logged} attempt(s) (--max-attempts)")
+                return 0
             continue
         print(f"Receive: GBA on, no further inputs. Working save: {sav}")
         code = report_jirachi_sv(
@@ -254,16 +259,20 @@ def run_hunt(
             attempt=attempt,
             started_at=started_at,
         )
+        if hunt_log.last_logged_result() == "shiny":
+            return 0
         if code != 0:
             try:
                 recover_after_fail(session, pad)
             except (DolphinError, InputError, SequenceError) as recover_exc:
                 print(str(recover_exc), file=sys.stderr)
                 return 1
+            logged += 1
             select_pal_hz = False
+            if max_attempts is not None and logged >= max_attempts:
+                print(f"Stopped after {logged} attempt(s) (--max-attempts)")
+                return 0
             continue
-        if hunt_log.last_logged_result() == "shiny":
-            return 0
         logged += 1
         try:
             recover_after_fail(session, pad)
@@ -299,6 +308,21 @@ def run_force_shiny(paths: HuntPaths) -> int:
     )
 
 
+def log_missed_attempt(
+    hunt_log: HuntLog,
+    *,
+    attempt: int,
+    started_at: float,
+) -> None:
+    """Log a completed attempt that did not land a Jirachi (stdout + attempts.txt)."""
+    hunt_log.write_attempt(
+        attempt=attempt,
+        duration_s=time.perf_counter() - started_at,
+        sv=-1,
+        result="miss",
+    )
+
+
 def report_jirachi_sv(
     sav: Path,
     hunt_log: HuntLog | None = None,
@@ -309,6 +333,8 @@ def report_jirachi_sv(
         mon = jirachi_from_save(sav)
     except SavError as exc:
         print(str(exc), file=sys.stderr)
+        if hunt_log is not None and attempt is not None and started_at is not None:
+            log_missed_attempt(hunt_log, attempt=attempt, started_at=started_at)
         return 1
     print(
         "Jirachi: "

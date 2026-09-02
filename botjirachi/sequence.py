@@ -52,9 +52,11 @@ JIRACHI_SCENE_S = 30.0
 OAK_YES_BEFORE_GBA = 16
 OAK_YES_BETWEEN_S = 0.55
 GBA_AFTER_OAK_S = 2.0
-# After GBA on, Channel writes -2.sav when Jirachi lands (~17 s measured
-# from "GBA on" to mtime). Cap 18 s; return earlier if the file updates.
+# After GBA on, Channel often writes -2.sav when Jirachi lands (~17 s).
+# Cap 18 s with GBA still on. If the file did not change, turning Port 2
+# off can flush the GBA save (success screen says “turn off the GBA”).
 TRANSFER_AFTER_GBA_S = 18.0
+FLUSH_AFTER_GBA_OFF_S = 2.0
 # After a failed receive Channel is on “turn off the GBA”. Port 2 None,
 # then A through leftover text, then restore while the GBA is off.
 # 1 s after the A's is a placeholder; tune when Home/Options is confirmed.
@@ -128,12 +130,26 @@ def receive_jirachi(
     _log(f"GBA on at {gba_on}; wait up to {TRANSFER_AFTER_GBA_S:.0f}s for {sav.name}")
     waited = _wait_sav_update(sav, before, TRANSFER_AFTER_GBA_S)
     if waited is None:
-        _log(f"sav mtime unchanged after {TRANSFER_AFTER_GBA_S:.0f}s")
+        _log(f"sav mtime unchanged after {TRANSFER_AFTER_GBA_S:.0f}s with GBA on")
     else:
         _log(
             f"sav updated at {datetime.now().isoformat(timespec='seconds')} "
             f"(+{waited:.1f}s after GBA on)"
         )
+    _log("Port 2 None (flush GBA save, then parse)")
+    try:
+        session.set_port2_none()
+    except DolphinError as exc:
+        raise SequenceError(str(exc)) from exc
+    if waited is None:
+        flushed = _wait_sav_update(sav, before, FLUSH_AFTER_GBA_OFF_S)
+        if flushed is None:
+            _log(f"sav still unchanged after GBA off ({FLUSH_AFTER_GBA_OFF_S:.0f}s)")
+        else:
+            _log(
+                f"sav updated after GBA off "
+                f"({datetime.now().isoformat(timespec='seconds')})"
+            )
     return sav
 
 
