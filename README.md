@@ -28,7 +28,9 @@ Pad maps (from `GCPadNew.ini` / `GBA.ini`, not unified): Channel A=`X`, B=`Z`, S
 
 `--probe-inputs` focuses Channel, taps A (`X`), enables GBA on Port 2 (`Rom2` auto-loads Ruby), then focuses GBA2 and taps A (`1`).
 
-`--receive` runs one timed Channel → Ruby Jirachi receive (title → Options → Jirachi → GBA at the prompt → Continue → transfer → in-game save). Delays live in `botjirachi/sequence.py`.
+`--receive` runs one timed Channel → Ruby Jirachi receive (title → Options → Jirachi → GBA at the prompt → transfer). Delays live in `botjirachi/sequence.py`. After the transfer it parses the Port 2 `.sav` and prints Jirachi SV (shiny iff 0..7).
+
+`--parse-sv` reads a Ruby `.sav` and prints Jirachi SV without restoring the save or starting Dolphin. Default file is Dolphin `GBA/Saves/…-2.sav`; pass a path to parse another file. Missing Jirachi is an error.
 
 The hunt loop itself is later plans; `python3 -m botjirachi` is the single entry point.
 

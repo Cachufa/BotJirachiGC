@@ -9,6 +9,7 @@ from pathlib import Path
 
 from botjirachi.dolphin import DolphinError, DolphinSession
 from botjirachi.inputs import InputError, PadDriver
+from botjirachi.party import SavError, jirachi_from_save
 from botjirachi.paths import HuntPaths
 from botjirachi.restore import RestoreError, restore_ruby_save
 from botjirachi.sequence import PAL_HZ, SequenceError, receive_jirachi
@@ -37,7 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--receive",
         action="store_true",
-        help="One Channel → Ruby Jirachi receive, then in-game save (plan 05)",
+        help="One Channel → Ruby Jirachi receive, then parse SV from -2.sav",
     )
     parser.add_argument(
         "--pal-hz",
@@ -45,6 +46,17 @@ def build_parser() -> argparse.ArgumentParser:
         choices=(50, 60),
         default=None,
         help="PAL boot 50 or 60 Hz (default 60; 60 is the upper option)",
+    )
+    parser.add_argument(
+        "--parse-sv",
+        nargs="?",
+        const="",
+        default=None,
+        metavar="SAV",
+        help=(
+            "Parse Channel Jirachi SV from a Ruby .sav and exit "
+            "(default: Dolphin port-2 -2.sav). Skips restore and Dolphin."
+        ),
     )
     return parser
 
@@ -82,6 +94,9 @@ def print_header(paths: HuntPaths) -> None:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     paths = resolve_paths(args)
+    if args.parse_sv is not None:
+        sav = Path(args.parse_sv).expanduser() if args.parse_sv else paths.dolphin_ruby_sav_port2
+        return run_parse_sv(sav.resolve())
     missing = paths.missing()
     if missing:
         report_missing(missing)
@@ -121,6 +136,26 @@ def run_receive(session: DolphinSession, pal_hz: int) -> int:
         print(str(exc), file=sys.stderr)
         return 1
     print(f"Receive: GBA on, no further inputs. Working save: {sav}")
+    return report_jirachi_sv(sav)
+
+
+def run_parse_sv(sav: Path) -> int:
+    print(f"Parse SV: {sav}")
+    return report_jirachi_sv(sav)
+
+
+def report_jirachi_sv(sav: Path) -> int:
+    try:
+        mon = jirachi_from_save(sav)
+    except SavError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print(
+        "Jirachi: "
+        f"slot={mon.slot}  pid={mon.personality:08X}  "
+        f"tid={mon.tid}  sid={mon.sid}  ot={mon.ot_name}  "
+        f"sv={mon.shiny_value}  shiny={mon.is_shiny}"
+    )
     return 0
 
 
