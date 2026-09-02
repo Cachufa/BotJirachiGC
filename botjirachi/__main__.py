@@ -11,6 +11,7 @@ from botjirachi.dolphin import DolphinError, DolphinSession
 from botjirachi.inputs import InputError, PadDriver
 from botjirachi.paths import HuntPaths
 from botjirachi.restore import RestoreError, restore_ruby_save
+from botjirachi.sequence import PAL_HZ, SequenceError, receive_jirachi
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -32,6 +33,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--probe-inputs",
         action="store_true",
         help="After Channel boots: tap Channel A (X), load Ruby on GBA2, tap GBA A",
+    )
+    parser.add_argument(
+        "--receive",
+        action="store_true",
+        help="One Channel → Ruby Jirachi receive, then in-game save (plan 05)",
+    )
+    parser.add_argument(
+        "--pal-hz",
+        type=int,
+        choices=(50, 60),
+        default=None,
+        help="PAL boot 50 or 60 Hz (default 60; 60 is the upper option)",
     )
     return parser
 
@@ -93,6 +106,21 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  window: {title}")
     if args.probe_inputs:
         return probe_inputs(session)
+    if args.receive:
+        hz = args.pal_hz if args.pal_hz is not None else PAL_HZ
+        print(f"Receive: PAL {hz} Hz")
+        return run_receive(session, hz)
+    print("Channel running with Port 2 empty. Use --receive for one transfer.")
+    return 0
+
+
+def run_receive(session: DolphinSession, pal_hz: int) -> int:
+    try:
+        sav = receive_jirachi(session, pal_hz=pal_hz)
+    except (DolphinError, InputError, SequenceError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print(f"Receive: GBA on, no further inputs. Working save: {sav}")
     return 0
 
 

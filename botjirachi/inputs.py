@@ -74,6 +74,20 @@ _PAD_INI_KEYS = {
     "Right": ("D-Pad/Right",),
 }
 
+# Channel title/Options use a free cursor driven by the analog stick.
+CHANNEL_STICK_DEFAULTS = {
+    "Up": "up",
+    "Down": "down",
+    "Left": "left",
+    "Right": "right",
+}
+_STICK_INI_KEYS = {
+    "Up": ("Main Stick/Up",),
+    "Down": ("Main Stick/Down",),
+    "Left": ("Main Stick/Left",),
+    "Right": ("Main Stick/Right",),
+}
+
 
 class InputError(Exception):
     """Keyboard/mouse events could not be sent, or Accessibility is missing."""
@@ -161,11 +175,14 @@ def pad_map_from_ini(
     path: Path,
     section: str,
     defaults: dict[str, str],
+    *,
+    ini_keys: dict[str, tuple[str, ...]] | None = None,
 ) -> dict[str, str]:
     """Read button → key names from a Dolphin pad ini, falling back to defaults."""
     data = _ini_section(path, section)
     mapped = dict(defaults)
-    for button, keys in _PAD_INI_KEYS.items():
+    lookup = ini_keys if ini_keys is not None else _PAD_INI_KEYS
+    for button, keys in lookup.items():
         if button not in defaults and button not in mapped:
             continue
         for ini_key in keys:
@@ -287,16 +304,27 @@ class PadDriver:
     def __init__(self, session: DolphinSession) -> None:
         self.session = session
         user = session.paths.dolphin_user_dir / "Config"
-        self.channel_map = pad_map_from_ini(
-            user / "GCPadNew.ini", "GCPad1", CHANNEL_DEFAULTS
+        gcpad = user / "GCPadNew.ini"
+        self.channel_map = pad_map_from_ini(gcpad, "GCPad1", CHANNEL_DEFAULTS)
+        self.channel_stick = pad_map_from_ini(
+            gcpad, "GCPad1", CHANNEL_STICK_DEFAULTS, ini_keys=_STICK_INI_KEYS
         )
         self.gba_map = pad_map_from_ini(
             user / "GBA.ini", "GBA2", GBA2_DEFAULTS
         )
 
-    def tap_channel(self, button: str, hold_s: float = HOLD_S, times: int = 1) -> None:
+    def tap_channel(
+        self,
+        button: str,
+        hold_s: float = HOLD_S,
+        times: int = 1,
+        between_s: float | None = None,
+    ) -> None:
         self.session.tap_key_on_channel(
-            self._channel_key(button), hold_s=hold_s, times=times
+            self._channel_key(button),
+            hold_s=hold_s,
+            times=times,
+            between_s=between_s,
         )
 
     def tap_gba(self, button: str, hold_s: float = HOLD_S, times: int = 1) -> None:
@@ -312,11 +340,25 @@ class PadDriver:
         ]
         self.session.hold_keys_on_gba(keys, hold_s=0.5)
 
-    def hold_channel(self, button: str) -> None:
-        self.session.tap_key_on_channel(self._channel_key(button), hold_s=0.2)
+    def hold_channel(self, button: str, hold_s: float = 0.45) -> None:
+        self.session.hold_keys_on_channel([self._channel_key(button)], hold_s=hold_s)
 
-    def hold_gba(self, button: str) -> None:
-        self.session.tap_key_on_gba(self._gba_key(button), hold_s=0.2)
+    def hold_channel_stick(self, *directions: str, hold_s: float) -> None:
+        """Hold analog stick (title cursor). Each arg is Up/Down/Left/Right."""
+        if not directions:
+            raise InputError("hold_channel_stick needs a direction")
+        keys: list[str] = []
+        for direction in directions:
+            try:
+                keys.append(self.channel_stick[direction])
+            except KeyError as exc:
+                raise InputError(
+                    f"Channel stick has no direction {direction!r}"
+                ) from exc
+        self.session.hold_keys_on_channel(keys, hold_s=hold_s)
+
+    def hold_gba(self, button: str, hold_s: float = 0.45) -> None:
+        self.session.hold_keys_on_gba([self._gba_key(button)], hold_s=hold_s)
 
     def release_channel(self, button: str) -> None:
         release_key(self._channel_key(button))

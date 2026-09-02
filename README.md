@@ -28,6 +28,8 @@ Pad maps (from `GCPadNew.ini` / `GBA.ini`, not unified): Channel A=`X`, B=`Z`, S
 
 `--probe-inputs` focuses Channel, taps A (`X`), enables GBA on Port 2 (`Rom2` auto-loads Ruby), then focuses GBA2 and taps A (`1`).
 
+`--receive` runs one timed Channel → Ruby Jirachi receive (title → Options → Jirachi → GBA at the prompt → Continue → transfer → in-game save). Delays live in `botjirachi/sequence.py`.
+
 The hunt loop itself is later plans; `python3 -m botjirachi` is the single entry point.
 
 See `CLAUDE.md` for project conventions.

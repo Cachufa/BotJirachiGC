@@ -35,10 +35,10 @@ Split (implement in this order). Status values: `requirements — not started` �
 | 02 | [restore-ruby-save.md](restore-ruby-save.md) | done |
 | 03 | [dolphin-process.md](dolphin-process.md) | done |
 | 04 | [inputs-macos.md](inputs-macos.md) | done |
-| 05 | [channel-gba-sequence.md](channel-gba-sequence.md) | requirements — not started |
+| 05 | [channel-gba-sequence.md](channel-gba-sequence.md) | done |
 | 06 | [parse-shiny-value.md](parse-shiny-value.md) | requirements — not started |
 | 07 | [logging.md](logging.md) | requirements — not started |
 | 08 | [when-shiny.md](when-shiny.md) | requirements — not started |
 | 09 | [hunt-loop.md](hunt-loop.md) | requirements — not started |
 
-Active: [channel-gba-sequence.md](channel-gba-sequence.md) (next). Plan 04 [inputs-macos.md](inputs-macos.md) is done.
+Active: next is [parse-shiny-value.md](parse-shiny-value.md). Plan 05 `--receive` works (Jirachi on `-2.sav`; ~20 s after GBA).

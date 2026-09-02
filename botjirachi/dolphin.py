@@ -348,10 +348,18 @@ class DolphinSession:
     def focus_gba_window(self) -> str:
         return self._focus_matching(is_gba_port2_window, "GBA2", fallback=is_gba_window)
 
-    def tap_key_on_channel(self, key: str, hold_s: float = 0.15, times: int = 1) -> None:
+    def tap_key_on_channel(
+        self,
+        key: str,
+        hold_s: float = 0.15,
+        times: int = 1,
+        between_s: float | None = None,
+    ) -> None:
         """Focus Channel and send HID keys while osascript keeps Dolphin frontmost."""
         self._dismiss_settings_windows()
-        self._tap_key_on_matching(is_channel_window, "Channel", key, hold_s, times=times)
+        self._tap_key_on_matching(
+            is_channel_window, "Channel", key, hold_s, times=times, between_s=between_s
+        )
 
     def tap_key_on_gba(self, key: str, hold_s: float = 0.15, times: int = 1) -> None:
         self._dismiss_settings_windows()
@@ -360,6 +368,11 @@ class DolphinSession:
         self._tap_key_on_matching(
             is_gba_port2_window, "GBA2", key, hold_s, fallback=is_gba_window, times=times
         )
+
+    def hold_keys_on_channel(self, keys: list[str], hold_s: float = 0.45) -> None:
+        """Hold Channel pad keys (analog stick for the title cursor)."""
+        self._dismiss_settings_windows()
+        self._hold_keys_on_matching(is_channel_window, "Channel", keys, hold_s)
 
     def hold_keys_on_gba(self, keys: list[str], hold_s: float = 0.45) -> None:
         """Hold several GBA keys at once (e.g. Ruby A+B+Select+Start)."""
@@ -684,6 +697,7 @@ class DolphinSession:
         hold_s: float,
         fallback=None,
         times: int = 1,
+        between_s: float | None = None,
     ) -> None:
         frames = self.window_frames()
         chosen = next((f for f in frames if matcher(f[0])), None)
@@ -699,19 +713,24 @@ class DolphinSession:
         cy = y + max(28 + (h - 28) // 2, 40)
         hold = max(float(hold_s), 0.12)
         taps = max(int(times), 1)
+        between = 0.16 if between_s is None else max(float(between_s), 0.05)
+        hid_len = 0.72 + taps * (hold + between)
+        as_delay = max(1.6, hid_len + 0.35)
         # Accessibility click does not make the Qt GBA widget the key window.
         # Keep Dolphin frontmost with a blocking osascript delay; HID click+keys
         # fire meanwhile so Terminal cannot steal them.
+        hid_error: list[BaseException] = []
+
         def send_hid() -> None:
-            time.sleep(0.5)
             try:
+                time.sleep(0.5)
                 left_click_at(cx, cy)
-            except InputError:
-                pass
-            time.sleep(0.22)
-            for _ in range(taps):
-                tap_key(key, hold_s=hold)
-                time.sleep(0.18)
+                time.sleep(0.22)
+                for _ in range(taps):
+                    tap_key(key, hold_s=hold)
+                    time.sleep(between)
+            except BaseException as exc:
+                hid_error.append(exc)
 
         worker = threading.Thread(target=send_hid, daemon=True)
         worker.start()
@@ -732,11 +751,12 @@ class DolphinSession:
                 end repeat
                 delay 0.2
               end tell
-              delay 1.6
+              delay {as_delay:.3f}
             end tell
             """
         )
-        worker.join(timeout=3.5)
+        worker.join(timeout=as_delay + 2.0)
+        self._raise_hid_error(hid_error)
 
     def _hold_keys_on_matching(
         self,
@@ -759,21 +779,25 @@ class DolphinSession:
         escaped = title.replace("\\", "\\\\").replace('"', '\\"')
         cx = x + max(w // 2, 8)
         cy = y + max(28 + (h - 28) // 2, 40)
-        hold = max(float(hold_s), 0.35)
+        hold = max(float(hold_s), 0.05)
         key_list = list(keys)
+        hid_lead = 0.72
+        as_delay = max(1.6, hid_lead + hold + 0.4)
+
+        hid_error: list[BaseException] = []
 
         def send_hid() -> None:
-            time.sleep(0.5)
             try:
+                time.sleep(0.5)
                 left_click_at(cx, cy)
-            except InputError:
-                pass
-            time.sleep(0.22)
-            for key in key_list:
-                press_key(key)
-            time.sleep(hold)
-            for key in reversed(key_list):
-                release_key(key)
+                time.sleep(0.22)
+                for key in key_list:
+                    press_key(key)
+                time.sleep(hold)
+                for key in reversed(key_list):
+                    release_key(key)
+            except BaseException as exc:
+                hid_error.append(exc)
 
         worker = threading.Thread(target=send_hid, daemon=True)
         worker.start()
@@ -794,11 +818,18 @@ class DolphinSession:
                 end repeat
                 delay 0.2
               end tell
-              delay 1.6
+              delay {as_delay:.3f}
             end tell
             """
         )
-        worker.join(timeout=3.5)
+        worker.join(timeout=as_delay + 2.0)
+        self._raise_hid_error(hid_error)
+
+    def _raise_hid_error(self, hid_error: list[BaseException]) -> None:
+        if not hid_error:
+            return
+        exc = hid_error[0]
+        raise DolphinError(str(exc)) from exc
 
     def _raise_and_click(self, title: str, x: int, y: int, w: int, h: int) -> None:
         escaped = title.replace("\\", "\\\\").replace('"', '\\"')
