@@ -10,6 +10,7 @@ from tempfile import TemporaryDirectory
 
 from botjirachi.huntlog import (
     HuntLog,
+    consecutive_sv_count,
     format_shiny_summary,
     format_utc,
     last_attempt_number,
@@ -41,6 +42,26 @@ class LastAttemptTests(unittest.TestCase):
         )
 
 
+class ConsecutiveSvTests(unittest.TestCase):
+    def test_trailing_minus_one_skips_headers(self) -> None:
+        text = (
+            "2026-08-31T18:00:00Z  attempt=1  duration_s=1.0  sv=1842  result=fail\n"
+            "2026-08-31T18:01:00Z  attempt=2  duration_s=1.0  sv=-1  result=miss\n"
+            "# note\n"
+            "2026-08-31T18:02:00Z  attempt=3  duration_s=1.0  sv=-1  result=miss\n"
+        )
+        self.assertEqual(consecutive_sv_count(text, -1), 2)
+        self.assertEqual(consecutive_sv_count("", -1), 0)
+
+    def test_fail_breaks_the_streak(self) -> None:
+        text = (
+            "2026-08-31T18:00:00Z  attempt=1  duration_s=1.0  sv=-1  result=miss\n"
+            "2026-08-31T18:01:00Z  attempt=2  duration_s=1.0  sv=1842  result=fail\n"
+            "2026-08-31T18:02:00Z  attempt=3  duration_s=1.0  sv=-1  result=miss\n"
+        )
+        self.assertEqual(consecutive_sv_count(text, -1), 1)
+
+
 class ResultTests(unittest.TestCase):
     def test_shiny_iff_sv_0_to_7(self) -> None:
         self.assertEqual(result_for_sv(0), "shiny")
@@ -61,6 +82,7 @@ class HuntLogTests(unittest.TestCase):
 
     def test_missing_file_starts_at_one(self) -> None:
         self.assertEqual(self.log.next_attempt_number(), 1)
+        self.assertEqual(self.log.consecutive_sv(-1), 0)
 
     def test_prepare_persists_hunt_start_and_does_not_reset(self) -> None:
         first = datetime(2026, 8, 31, 18, 0, tzinfo=timezone.utc)

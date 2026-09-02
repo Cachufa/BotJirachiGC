@@ -22,6 +22,7 @@ SHINY_NAME = "shiny.txt"
 # One field in the attempt line: `attempt=12` bounded by start/whitespace.
 _ATTEMPT_RE = re.compile(r"(?:^|\s)attempt=(\d+)(?:\s|$)")
 _RESULT_RE = re.compile(r"(?:^|\s)result=(\S+)(?:\s|$)")
+_SV_RE = re.compile(r"(?:^|\s)sv=(-?\d+)(?:\s|$)")
 
 
 def utc_now() -> datetime:
@@ -71,6 +72,19 @@ def last_attempt_result(text: str) -> str | None:
         if match:
             last = match.group(1)
     return last
+
+
+def consecutive_sv_count(text: str, sv: int) -> int:
+    """Trailing attempt lines whose `sv=` matches, newest first. Headers skipped."""
+    count = 0
+    for line in reversed(text.splitlines()):
+        if not _ATTEMPT_RE.search(line):
+            continue
+        match = _SV_RE.search(line)
+        if match is None or int(match.group(1)) != sv:
+            break
+        count += 1
+    return count
 
 
 def total_hunt_seconds(started: datetime, when: datetime) -> float:
@@ -152,6 +166,10 @@ class HuntLog:
     def last_logged_result(self) -> str | None:
         text = self._attempts_text()
         return None if text is None else last_attempt_result(text)
+
+    def consecutive_sv(self, sv: int) -> int:
+        text = self._attempts_text()
+        return 0 if text is None else consecutive_sv_count(text, sv)
 
     def write_run_header(self, started: datetime, next_attempt: int) -> None:
         """Stdout-only. Do not log secrets or dump paths here."""

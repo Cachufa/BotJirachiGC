@@ -25,7 +25,7 @@ Needs macOS **Accessibility** for the app that launches the command (Terminal, i
 3. When Channel asks to turn the GBA on: Port 2 = GBA (Integrated). Rom2 auto-loads Ruby. No extra GBA Reset / right-click if the ROM is already loaded.
 4. Wait until the port-2 `.sav` updates (~17 s). Then Port 2 None so the GBA can flush. Parse the party Jirachi (OT CHANNEL, TID 40122). Shiny iff SV is 0..7.
 
-**Fail (not shiny):** Port 2 None (turn off GBA) → Channel **A × 3** → wait 1 s → copy the original Ruby `.sav` onto both Dolphin GBA slots. Next attempt **skips 60 Hz**. On the Options 2×2 it nudges the stick **Up 0.02 s** (HID only) so the cursor hits Jirachi, then the same menus again.
+**Fail (not shiny):** Port 2 None (turn off GBA) → Channel **A × 3** → wait 1 s → copy the original Ruby `.sav` onto both Dolphin GBA slots. Next attempt **skips 60 Hz**. On the Options 2×2 it nudges the stick **Up 0.02 s** (HID only) so the cursor hits Jirachi, then the same menus again. **Five `sv=-1` in a row:** kill Dolphin, restore, boot Channel, pick 60 Hz again.
 
 **Shiny:** stop. Do **not** restore. Log a summary. `notify_shiny` is a stub (Discord later). Exit `0`. A later launch also skips restore if the last log line is `result=shiny`.
 
@@ -39,7 +39,7 @@ Same attempt line on stdout and `logs/attempts.txt` (append-only):
 2026-09-02T14:54:06Z  attempt=5  duration_s=129.6  sv=38123  result=fail
 ```
 
-Restart continues `attempt` from that file. `logs/hunt_started.txt` is the wall-clock hunt start (not reset). A shiny also appends `logs/shiny.txt`. If the `.sav` does not update or Jirachi is missing: `sv=-1  result=miss` (still has `attempt` and `duration_s`).
+Restart continues `attempt` from that file. `logs/hunt_started.txt` is the wall-clock hunt start (not reset). A shiny also appends `logs/shiny.txt`. If the `.sav` does not update or Jirachi is missing: `sv=-1  result=miss` (still has `attempt` and `duration_s`). Five misses in a row: kill Dolphin, restore the original `.sav`, boot Channel again (PAL Hz), keep hunting.
 
 ## Other commands
 

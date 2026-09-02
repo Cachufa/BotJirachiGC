@@ -18,6 +18,8 @@ Default CLI (`python3 -m botjirachi`) is the loop. `--receive` stays one shot (C
 
 **Retry receive:** skip PAL Hz. Same menus as boot; before Jirachi A, a tiny stick Up so the cursor hits the button.
 
+**Five consecutive misses (`sv=-1`):** stop the in-game fail path, kill Dolphin, restore the original Ruby `.sav`, boot Channel with Port 2 empty, pick PAL Hz again. A logged fail or shiny, or a Dolphin reboot, resets the streak (five more misses before the next kill). Seeded from the trailing `sv=-1` lines in `logs/attempts.txt`.
+
 **Shiny:** [when-shiny.md](when-shiny.md) — no restore, no fail path.
 
 Ctrl+C: leave emu/saves; do not wipe logs.
@@ -27,6 +29,7 @@ Ctrl+C: leave emu/saves; do not wipe logs.
 - [x] Implement the loop using the sibling plans (do not duplicate their rules).
 - [x] Time each attempt for `duration_s`.
 - [x] Fail path: Port 2 None, A ×3, 1 s, then restore; shiny path never restores.
+- [x] Five consecutive `sv=-1`: kill Dolphin, restore, boot Channel, pick PAL Hz.
 
 ## Out of scope
 
