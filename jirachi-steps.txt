@@ -20,8 +20,15 @@ Steps
 -----
 1. Close Dolphin completely, then open it again.
 2. Start Pokémon Channel (Europe). Only Channel should open (no GBA window).
-3. Title screen → Options (Opciones).
-4. Open Jirachi (it used to be ??? until Channel is cleared).
+   PAL boot asks 50 Hz vs 60 Hz every time on this Dolphin: A on the
+   “choose a mode” text, then 60 Hz (top, already highlighted) or 50 Hz
+   (bottom); A; then A on “you selected Hz”. Title cursor starts on
+   Continue (bottom-left). Title 2x2: Nuevo juego | Opciones / Continuar |
+   Extra. From Continuar: right to Extra, up to Opciones. 60 Hz is faster
+   for the hunt.
+3. Title screen: cursor starts on Continue (bottom-left) → Options (Opciones).
+4. Options 2x2: Ajustes | Jirachi / Créditos | Volver. Wait a beat, then
+   right+up to Jirachi (same move as title Options).
 5. Professor Oak / Jirachi intro. Answer Yes to send Jirachi to Ruby/Sapphire.
 6. Confirm Elite Four is beaten, and that the party has a free slot.
 7. When Channel asks to connect / turn on the GBA:

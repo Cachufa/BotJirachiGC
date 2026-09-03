@@ -1,6 +1,23 @@
 # Jirachi shiny loop (requirements)
 
-Status: **requirements only**. Do not implement until this spec is accepted.
+This file is the **umbrella** snapshot. Do not delete it.
+
+- **Number:** 00 (umbrella)
+- **Status:** done
+
+Work is split into:
+
+| # | Plan | Topic | Status |
+|---|------|--------|--------|
+| 01 | [python-project.md](python-project.md) | Python layout, CLI, deps | done |
+| 02 | [restore-ruby-save.md](restore-ruby-save.md) | Copy original `.sav` into Dolphin | done |
+| 03 | [dolphin-process.md](dolphin-process.md) | Keep Dolphin alive, Port 2, boot Channel | done |
+| 04 | [inputs-macos.md](inputs-macos.md) | Keyboard, window focus, Load ROM | done |
+| 05 | [channel-gba-sequence.md](channel-gba-sequence.md) | Timed Channel → GBA transfer + Ruby save | done |
+| 06 | [parse-shiny-value.md](parse-shiny-value.md) | Party parse, SV 0..7 | done |
+| 07 | [logging.md](logging.md) | Terminal + files, resume attempt number | done |
+| 08 | [when-shiny.md](when-shiny.md) | Stop loop, summary, notify TODO | done |
+| 09 | [hunt-loop.md](hunt-loop.md) | Wire the pieces into the repeat loop | done |
 
 ## Goal
 

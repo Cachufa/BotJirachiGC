@@ -25,4 +25,20 @@ How we verify it.
 
 Name or link the **active** plan here when there is one.
 
-Active: [jirachi-shiny-loop.md](jirachi-shiny-loop.md) (requirements only, not implementing yet).
+Umbrella (do not delete): [jirachi-shiny-loop.md](jirachi-shiny-loop.md) — **00**, status: **done**.
+
+Split (implement in this order). Status values: `requirements — not started` → `in progress` → `done`.
+
+| # | Plan | Status |
+|---|------|--------|
+| 01 | [python-project.md](python-project.md) | done |
+| 02 | [restore-ruby-save.md](restore-ruby-save.md) | done |
+| 03 | [dolphin-process.md](dolphin-process.md) | done |
+| 04 | [inputs-macos.md](inputs-macos.md) | done |
+| 05 | [channel-gba-sequence.md](channel-gba-sequence.md) | done |
+| 06 | [parse-shiny-value.md](parse-shiny-value.md) | done |
+| 07 | [logging.md](logging.md) | done |
+| 08 | [when-shiny.md](when-shiny.md) | done |
+| 09 | [hunt-loop.md](hunt-loop.md) | done |
+
+Active: none (01–09 done). Default `python3 -m botjirachi` loops until shiny.

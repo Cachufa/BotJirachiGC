@@ -35,4 +35,8 @@ Automatización para cazar Jirachi shiny usando recursos de GameCube / GBA. Los 
 
 ## Comandos
 
-Aún no hay toolchain fijada. Cuando exista (`make`, tests, lint), documentarla aquí y en `.claude/rules/toolchain.md`.
+- Hunt (desde la raíz del repo): `python3 -m botjirachi`
+- Si faltan ISO, GBA, `.sav` original, BIOS GBA o el binario de Dolphin: error en stderr y exit `1`
+- Tras el check: copia el `.sav` original a las dos ranuras GBA de Dolphin; no escribe en `resources/`
+- Arranca Channel en Dolphin con el puerto 2 vacío; Ctrl+C no mata Dolphin. Accessibility de macOS para menús y teclado (`pynput`). `--probe-inputs` prueba Channel A y GBA2 A. `--parse-sv` lee el SV de Jirachi en un `.sav` (sin restore ni Dolphin). Default `python3 -m botjirachi` repite el receive hasta SV 0..7. Tras un fail: Port 2 None, A ×3, 1 s, restore; los reintentos no eligen 50/60 Hz. Un `sv=-1` (miss): mata Dolphin, restaura el `.sav`, arranca Channel y vuelve a elegir PAL Hz. `--receive` es un solo transfer (reset + Hz) y registra el intento en stdout y `logs/attempts.txt`; el número continúa al reiniciar. Si SV 0..7: no restaura el `.sav`, escribe resumen en `logs/shiny.txt`, `notify_shiny` (stub), exit `0`. `--force-shiny` finge ese hit sin restore ni Dolphin.
+- Detalle: `.claude/rules/toolchain.md`
